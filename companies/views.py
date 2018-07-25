@@ -7,11 +7,18 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from .models import Users
 from .serializers import UserSerializer
+from rest_framework import generics
 
+class UserList(generics.ListAPIView):
+    serializer_class = UserSerializer
 
-class UserList(APIView):
+    def get_queryset(self):
+        queryset = Users.objects.all()
+        username = self.request.query_params.get('name', None)
+        if username is not None:
+            queryset = queryset.filter(name__icontains=username)
+        return queryset
 
-    def get(self,request):
-        users = Users.objects.all()
-        serializer = UserSerializer(users,many=True)
-        return JsonResponse(serializer.data, safe=False)
+class UsersCreateView(generics.CreateAPIView):
+    serializer_class = UserSerializer
+    queryset = Users.objects.all()
